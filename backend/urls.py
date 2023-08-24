@@ -1,6 +1,8 @@
 from django.contrib import admin
-from django.urls import path
-from app.views import ReactView, check_user
+from django.urls import path, include
+from back.views import ReactView
+from back.views import CheckUserView
+
 
 # URL patterns for your Django app
 urlpatterns = [
@@ -10,6 +12,7 @@ urlpatterns = [
     # Default route for ReactView
     path('', ReactView.as_view(), name="xxx"),
     
-    # API endpoint to check user account
-    path('api/check-user', check_user, name='check_user'),
+    path('api/check-user/', CheckUserView.as_view(), name='check-user'),
+
+    path('', include('back.urls')),
 ]

@@ -6,7 +6,8 @@ from . serializer import *
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .models import React
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User,auth
+from django.contrib.auth import authenticate
 
 # Create your views here.
 
@@ -30,20 +31,31 @@ class ReactView(APIView):
             return Response(serializer.data)
 
 # Define a view to check user account
-@csrf_exempt
-def check_user(request):
-    if request.method == 'POST':
-        data = request.POST  # or request.data for JSON data
-        email = data.get('email')
-        password = data.get('password')
 
-        try:
-            # Check if user exists with the given email and matching password
-            user = React.objects.get(email=email)
-            if user.password == password:
-                return JsonResponse({'match': True})
-        except React.DoesNotExist:
-            pass
 
-    return JsonResponse({'match': False})
 
+
+class CheckUserView(APIView):
+    def post(self, request):
+        email = request.data.get('email')
+        password = request.data.get('password')
+        
+        user = authenticate(username=email, password=password)
+        
+        if user is not None:
+            return Response({'exists': True})
+        else:
+            return Response({'exists': False})
+
+
+
+def register (request):
+    if request.method == 'POST' :
+        
+        password1 = request. POST['password1']
+        password2 = request. POST['password2']
+        email = request. POST['email']
+
+        user = User.objects.create_user(email='email',password='password1')
+        user.save();
+        print("user created")

@@ -13,6 +13,5 @@ urlpatterns = [
     path('', ReactView.as_view(), name="xxx"),
     
     path('api/check-user/', CheckUserView.as_view(), name='check-user'),
-
-    path('', include('back.urls')),
+    
 ]

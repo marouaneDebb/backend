@@ -4,6 +4,10 @@ from .serializer import ReactSerializer
 from .models import React
 from django.contrib.auth import authenticate
 from django.http import JsonResponse
+from rest_framework.parsers import MultiPartParser
+from rest_framework import status
+from .models import UploadedFile
+from .serializer1 import UploadedFileSerializer
 
 
 # Create your views here.
@@ -54,3 +58,16 @@ class CheckUserView(APIView):
 
 
 
+class UploadFileView(APIView):
+    parser_classes = (MultiPartParser,)
+
+    def post(self, request, *args, **kwargs):
+        serializer = UploadedFileSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def get(self, request, *args, **kwargs):
+        files = UploadedFile.objects.all()
+        serializer = UploadedFileSerializer(files, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)

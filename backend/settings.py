@@ -105,10 +105,10 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': '3D_SMART',
-        'USER': 'postgres',
-        'PASSWORD': 'maro@0667',
-        'HOST': 'localhost'
+        'NAME':'test1',
+        'USER':'Admin',
+        'PASSWORD':'Admin',
+        'HOST': 'localhost',
     }
 }
 

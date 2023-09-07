@@ -1,4 +1,5 @@
 from rest_framework.views import APIView
+from django.http import FileResponse
 
 import os
 import numpy as np
@@ -86,7 +87,7 @@ class UploadFileView(APIView):
             model_name = 'MeshSegNet_Max_15_classes_72samples_lr1e-2_best.zip'
 
             mesh_path = UPLOAD_DIR  # need to define
-            sample_filenames = ['Sample_1_kszaXfl.obj'] # need to define
+            sample_filenames = [uploaded_file[9:]] # need to define
             output_path = 'outputs'
             if not os.path.exists(output_path):
                 os.mkdir(output_path)
@@ -113,12 +114,8 @@ class UploadFileView(APIView):
             model.eval()
             with torch.no_grad():
                 for i_sample in sample_filenames:
-                    windows_style_path = uploaded_file.replace('/', '\\')
-                    print(windows_style_path)
-                    print("ejfwiooooo",os.path.join(mesh_path, i_sample))
-
                     print('Predicting Sample filename: {}'.format(i_sample))
-                    mesh =vedo.load(windows_style_path[1:])#os.path.join(mesh_path, i_sample))
+                    mesh =vedo.load(os.path.join(mesh_path, i_sample))
 
                     # pre-processing: downsampling
                     if mesh.ncells > 10000:
@@ -191,20 +188,23 @@ class UploadFileView(APIView):
                     for i_label in range(num_classes):
                         predicted_labels_d[np.argmax(patch_prob_output[0, :], axis=-1)==i_label] = i_label
 
+                    vtp_file_path=os.path.join(output_path, '{}_predicted.vtp'.format(i_sample[:-4]))
                     # output downsampled predicted labels
                     mesh2 = mesh_d.clone()
                     mesh2.celldata['MaterialIds'] = predicted_labels_d
-                    vedo.write(mesh2, os.path.join(output_path, '{}_d_predicted_step5.vtp'.format(i_sample[:-4])))
-
+                    vedo.write(mesh2,vtp_file_path)
                     print('Sample filename: {} completed'.format(i_sample))
-            
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                   
+            if os.path.exists(vtp_file_path):
+                response = FileResponse(open(vtp_file_path, 'rb'), as_attachment=True, content_type='application/vtp')
+                response['Content-Disposition'] = f'attachment; filename="{os.path.basename(vtp_file_path)}"'
+                return response
+            else:
+                # Handle the case where the VTP file does not exist
+                return Response({'error': 'VTP file not found'}, status=status.HTTP_404_NOT_FOUND)    
+         
     def get(self, request, *args, **kwargs):
         files = UploadedFile.objects.all()
         serializer = UploadedFileSerializer(files, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-    """def get(self, request):
-        output = [{"file": output.file}
-                  for output in UploadedFile.objects.all()]
-        return Response(output)"""
+    
